@@ -36,6 +36,14 @@ RANDOM_SEED_SCHEMA_VERSION: Final[int] = 98
 # Minimum server schema for running item reads, playlist edits and queue commands as a user.
 IMPERSONATION_SCHEMA_VERSION: Final[int] = 101
 
+# Minimum server schema for mixing an announcement into the running stream.
+ANNOUNCEMENT_OVERLAY_SCHEMA_VERSION: Final[int] = 113
+
+# How an announcement reaches the player: interrupt the playback, or mix it into the
+# stream the player is already consuming.
+ANNOUNCEMENT_MODE_DEVICE: Final[str] = "device"
+ANNOUNCEMENT_MODE_OVERLAY: Final[str] = "overlay"
+
 # Client contract checked against the server's min_supported_schema_version at connect time,
 # not a feature gate.
 API_SCHEMA_VERSION: Final[int] = 101

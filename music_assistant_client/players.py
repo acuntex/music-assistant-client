@@ -15,6 +15,8 @@ from music_assistant_models.errors import (
 from music_assistant_models.player import Player, PlayerMedia, PlayerOptionValueType
 from music_assistant_models.player_control import PlayerControl
 
+from .constants import ANNOUNCEMENT_MODE_DEVICE, ANNOUNCEMENT_OVERLAY_SCHEMA_VERSION
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -236,6 +238,7 @@ class Players:
         message: str | None = None,
         tts_engine: str | None = None,
         language: str | None = None,
+        mode: str = ANNOUNCEMENT_MODE_DEVICE,
     ) -> None:
         """
         Handle playback of an announcement on given player.
@@ -245,12 +248,20 @@ class Players:
 
         :param language: Optional language code to speak the message in (e.g. 'nl-NL'),
             omit to let the engine speak in the language it is configured for.
+        :param mode: How the clip reaches the player. ANNOUNCEMENT_MODE_DEVICE pauses the
+            playback and resumes it afterwards. ANNOUNCEMENT_MODE_OVERLAY mixes the clip
+            into the running stream, so playback continues underneath it, and needs a
+            player that streams in flow mode.
         """
+        # a url-only announcement must keep working against every supported server
+        require_schema = 46 if message or tts_engine else None
+        if language:
+            require_schema = 47
+        if mode != ANNOUNCEMENT_MODE_DEVICE:
+            require_schema = ANNOUNCEMENT_OVERLAY_SCHEMA_VERSION
         await self.client.send_command(
             "players/cmd/play_announcement",
-            # speaking a message is only understood by a newer server; a url-only
-            # announcement must keep working against every supported server
-            require_schema=47 if language else 46 if message or tts_engine else None,
+            require_schema=require_schema,
             player_id=player_id,
             url=url,
             pre_announce=pre_announce,
@@ -259,6 +270,7 @@ class Players:
             message=message,
             tts_engine=tts_engine,
             language=language,
+            mode=mode,
         )
 
     async def tts_engines(self) -> list[dict[str, str]]:
